@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- WIN GUARD LMS - MODE AMAN. Wajib dipasangkan dengan win-guard-secure.sql. Jalankan win-guard-secure.sql dulu. Buka file ini lalu klik Atur Koneksi Supabase pada halaman login untuk memasukkan URL dan kunci (tanpa edit kode). -->
+<!-- WIN GUARD LMS - MODE AMAN. Wajib dipasangkan dengan win-guard-secure.sql. Jalankan win-guard-secure.sql dulu. Isi SUPABASE_URL dan SUPABASE_ANON_KEY pada bagian KONFIGURASI di dalam script file ini. -->
 <html lang="id"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>WIN GUARD LMS (Mode Aman)</title>
@@ -251,11 +251,20 @@ html[data-k] .mi.sub.on{box-shadow:none}
 .vlr .rt{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 </style></head><body><div id="app"></div><div id="ex"></div><div id="md"></div><div id="pr"></div><div id="ts"></div>
 <script>
+// =====================================================================
 // KONFIGURASI APLIKASI
-const IS_PREVIEW = false; // Ubah menjadi false SAAT DEPLOY agar mode preview & data dummy hilang dan terhubung 100% ke Supabase
-let SUPABASE_URL = "URL_SUPABASE_ANDA";
-let SUPABASE_ANON_KEY = "ANON_KEY_ANDA";
-try{const c=JSON.parse(localStorage.getItem("wg_cfg")||"null");if(c&&c.u&&c.k&&/ANDA/.test(SUPABASE_URL+SUPABASE_ANON_KEY)){SUPABASE_URL=c.u;SUPABASE_ANON_KEY=c.k}}catch(e){}
+// ISI DUA BARIS DI BAWAH INI dengan data dari Supabase:
+//   Project Settings > API > "Project URL" dan kunci "anon / public" (atau publishable).
+// JANGAN memakai kunci service_role atau secret.
+// Setelah diisi, simpan file ini lalu unggah ke hosting dengan nama index.html.
+// =====================================================================
+const IS_PREVIEW = false; // false = terhubung ke Supabase (jangan diubah)
+let SUPABASE_URL = "https://rixlnirlnxahokiairbj.supabase.co";        // contoh: "https://abcdefgh.supabase.co"
+let SUPABASE_ANON_KEY = "sb_publishable_4JqZp2cDC4Qg13PoLfFZrg_aVWEA-H0";       // contoh: "eyJhbGciOi..." atau "sb_publishable_..."
+// ---------------------------------------------------------------------
+(()=>{const k=String(SUPABASE_ANON_KEY);let bad=/^sb_secret_/i.test(k);try{const p=JSON.parse(atob(k.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));if(p.role=='service_role')bad=true}catch(e){}
+if(bad){document.addEventListener('DOMContentLoaded',()=>{document.body.innerHTML='<p style="padding:24px;font:16px sans-serif;color:#b91c1c"><b>Kunci rahasia terdeteksi (service_role/secret).</b> Jangan dipakai di HTML. Ganti dengan kunci anon/public di bagian KONFIGURASI.</p>'});throw new Error('Kunci rahasia terdeteksi')}
+if(/ANDA/i.test(String(SUPABASE_URL)+k))console.error('WIN GUARD: isi SUPABASE_URL dan SUPABASE_ANON_KEY pada bagian KONFIGURASI di file HTML.')})();
 const $=s=>document.querySelector(s),E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),
 ld=d=>new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10),
 lt=v=>v?new Date(new Date(v)-new Date(v).getTimezoneOffset()*6e4).toISOString().slice(0,16):'',
@@ -905,31 +914,6 @@ $('#ex').scrollTop=0;cbSt();tick()};
 document.addEventListener('keydown',e=>{if(!XS||XS.locked||!$('#cbg'))return;const t=e.target;if(t&&/^(INPUT|TEXTAREA)$/.test(t.tagName)&&t.type!='radio'&&t.type!='checkbox')return;if($('#md').style.display=='flex'||e.ctrlKey||e.metaKey||e.altKey)return;
 if(e.key=='ArrowRight'){e.preventDefault();nv(1)}else if(e.key=='ArrowLeft'){e.preventDefault();nv(-1)}else if(/^[a-hA-H]$/.test(e.key)){const el=[...document.querySelectorAll('#ex .cbo input')][LT.indexOf(e.key.toUpperCase())];if(el)el.click()}});
 
-// ===== Pengaturan koneksi Supabase di dalam aplikasi (tanpa edit kode) =====
-const cfgNeed=()=>!IS_PREVIEW&&/ANDA/i.test(String(SUPABASE_URL)+String(SUPABASE_ANON_KEY));
-function cfgChk(){const u=($('#cf_u').value||'').trim().replace(/\/+$/,''),k=($('#cf_k').value||'').trim();
-if(!/^https:\/\/[a-z0-9.-]+\.[a-z]{2,}$/i.test(u))throw new Error('URL tidak valid. Contoh: https://abcdefgh.supabase.co');
-if(k.length<30||/\s/.test(k))throw new Error('Kunci API tidak valid. Salin kunci anon/public atau publishable dari Project Settings > API.');
-try{const p=JSON.parse(atob(k.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));if(p.role=='service_role')throw new Error('Itu kunci service_role. JANGAN dipakai di aplikasi. Gunakan kunci anon/public.')}catch(e){if(/service_role/.test(e.message))throw e}
-if(/^sb_secret_/i.test(k))throw new Error('Itu kunci rahasia (secret). Gunakan kunci anon/public atau publishable.');
-return{u,k}}
-const cfgMsg=(t,ok)=>{const e=$('#cf_s');if(e){e.textContent=t;e.style.color=ok?'#1f8a57':'#c0392b'}};
-function cfgMo(){mo(`<h3>Atur Koneksi Supabase</h3><p class=mu style="margin-top:0">Isi dua data dari Supabase: <b>Project Settings &gt; API</b>. Kunci yang dipakai adalah <b>anon / public</b> (atau publishable), bukan service_role.</p>
-<label>Project URL</label><input id=cf_u placeholder="https://xxxxxxxx.supabase.co" autocomplete=off><label>Anon / Publishable Key</label><textarea id=cf_k rows=3 placeholder="eyJ... atau sb_publishable_..." autocomplete=off></textarea>
-<div class=tbr><button class="b l" onclick="cfgTest()">Uji Koneksi</button><button class="b o" onclick="cfgDown()">Unduh File Siap Pakai</button><button class="b l" onclick="cfgSave()">Pakai di Perangkat Ini</button></div>
-<p id=cf_s style="margin:10px 0 0;font-size:13px;font-weight:600"></p>
-<p class=mu style="font-size:12px;margin:8px 0 0"><b>Unduh File Siap Pakai</b>: file HTML yang sudah berisi koneksi Anda. Unggah file itu (namakan <b>index.html</b>) ke hosting agar siswa dan guru bisa membukanya. <b>Pakai di Perangkat Ini</b> hanya untuk mencoba di browser ini.</p>`)}
-const cfgTest=()=>T(async()=>{const{u,k}=cfgChk();cfgMsg('Menguji koneksi...',1);let r;try{r=await supabase.createClient(u,k).rpc('lms_sesi',{})}catch(e){throw new Error('Tidak dapat terhubung. Periksa URL dan koneksi internet.')}
-const m=r.error?String(r.error.message||'')+' '+String(r.error.code||''):'';
-if(!r.error)return cfgMsg('Koneksi berhasil dan SQL sudah terpasang.',1);
-if(/PGRST202|lms_sesi|schema cache|Could not find/i.test(m))return cfgMsg('Terhubung ke Supabase, tetapi SQL belum dijalankan. Jalankan win-guard-secure.sql di SQL Editor.',0);
-if(/Invalid API key|JWT|apikey|401|403/i.test(m))return cfgMsg('Kunci API ditolak. Periksa kembali kunci anon/public.',0);
-cfgMsg('Gagal: '+m.trim(),0)});
-const cfgSave=()=>T(async()=>{const{u,k}=cfgChk();try{localStorage.setItem('wg_cfg',JSON.stringify({u,k}))}catch(e){throw new Error('Browser tidak mengizinkan penyimpanan lokal.')}location.reload()});
-const cfgDown=()=>T(async()=>{const{u,k}=cfgChk();const js=[...document.querySelectorAll('script:not([src])')].map(s=>s.textContent).join('\n').replace(/(let SUPABASE_URL\s*=\s*)"[^"]*"/,(m,a)=>a+JSON.stringify(u)).replace(/(let SUPABASE_ANON_KEY\s*=\s*)"[^"]*"/,(m,a)=>a+JSON.stringify(k));
-const h='<!DOCTYPE html>\n<html lang="id">'+document.head.outerHTML+'<body><div id="app"></div><div id="ex"></div><div id="md"></div><div id="pr"></div><div id="ts"></div>\n<script>\n'+js+'\n<\/script></body></html>\n';
-const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([h],{type:'text/html'}));a.download='index.html';document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(a.href)},2000);cfgMsg('File index.html berhasil dibuat. Unggah ke hosting Anda.',1)});
-const _lgn2=lgn;lgn=function(){_lgn2.apply(this,arguments);if(cfgNeed()){const b=document.querySelector('#lw .lb');if(b)b.insertAdjacentHTML('afterbegin','<div class="tg Alpha" style="display:block;margin-bottom:12px;padding:12px;white-space:normal">Koneksi ke Supabase belum diatur.<br><button class="b o" style="margin-top:8px" onclick="cfgMo()">Atur Koneksi Supabase</button></div>')}};
 // ===== Ujikan kembali (jadwal asesmen) & berikan kembali (tugas) =====
 const jrTok=()=>Math.random().toString(36).slice(2,8).toUpperCase();
 let JR=null,TR=null;
